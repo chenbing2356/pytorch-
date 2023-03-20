@@ -36,7 +36,6 @@ def _check_balance(device_ids):
     'total_memory': 11264,
     'multi_processor_count': 28
     }
-    
     """
     dev_props = _get_devices_properties(device_ids)    # 模型和数据分配到指定的每一个GPU上， 
 
@@ -137,15 +136,19 @@ class DataParallel(Module):
             outputs = self.parallel_apply(replicas, inputs, kwargs)    # 并行在多个GPU上计算模型
             return self.gather(outputs, self.output_device)    # 将数据聚合到一起，传送到output_device上
 
+    # 复制模型，将副本放到每一个GPU设备上，传入模型和设备的ID列表
     def replicate(self, module, device_ids):
         return replicate(module, device_ids, not torch.is_grad_enabled())
 
+    # 将输入数据和关键参数分散到每一个设备上，传入输入数据、关键字参数和设备ID列表
     def scatter(self, inputs, kwargs, device_ids):
         return scatter_kwargs(inputs, kwargs, device_ids, dim=self.dim)
 
+    # 并行应用每个副本上的forward方法，传入副本列表、输入数据和关键字参数
     def parallel_apply(self, replicas, inputs, kwargs):
         return parallel_apply(replicas, inputs, kwargs, self.device_ids[:len(replicas)])
 
+    # 收集所有设备上的输出，并将它们合并成一个输出。传入设备输出列表和输出设备ID
     def gather(self, outputs, output_device):
         return gather(outputs, output_device, dim=self.dim)
 
